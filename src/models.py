@@ -9,24 +9,26 @@ from .enums import EdgeType, ModuleStatus
 class Module:
     """A colony subsystem — vertex in the infrastructure graph."""
 
-    module_id: str                      # e.g. "CTL-01"
-    name: str                           # display name
-    priority: int                       # 1 = inviolável; higher = shutdown first
-    energy_consumption_kw: float        # kW nominal — 24h operation
-    storage_capacity_m3: float          # m³ — SIMULATED
-    communication_priority: int         # 1 = high comm need; 5 = low
+    module_id: str
+    name: str
+    priority: int                    # 1 = inviolable; higher = shutdown first
+    energy_consumption_kw: float     # kW nominal — 24h operation (SIMULATED)
+    storage_capacity_m3: float       # m³ operational footprint (SIMULATED)
+    communication_priority: int      # 1 = critical real-time; 5 = periodic
     status: ModuleStatus = ModuleStatus.OPERATIONAL
+    parent_id: str | None = None     # None = top-level complex or standalone
+    unit_count: int = 1              # physical units represented by this node
 
 
 @dataclass(frozen=True)
 class Edge:
     """Bidirectional connection between two colony modules — edge in the graph."""
 
-    source: str             # module_id
-    target: str             # module_id
-    distance_m: float       # physical distance in meters — SIMULATED
-    energy_cost_kw: float   # kW to maintain this link — SIMULATED
-    latency_ms: float       # communication latency in ms — SIMULATED
+    source: str
+    target: str
+    distance_m: float       # physical distance in meters (SIMULATED)
+    energy_cost_kw: float   # kW to maintain this link (SIMULATED)
+    latency_ms: float       # communication latency in ms (SIMULATED)
     edge_type: EdgeType
 
 

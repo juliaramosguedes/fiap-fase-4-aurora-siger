@@ -33,7 +33,7 @@ def bfs_shortest_path(
         return [start_id]
 
     visited: set[str] = {start_id}
-    # store full path to each node — memory trade-off justified for V=13
+    # store full path to each node — memory trade-off justified for V≤108
     queue: deque[list[str]] = deque([[start_id]])
 
     while queue:
