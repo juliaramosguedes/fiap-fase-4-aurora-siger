@@ -6,7 +6,7 @@
 
 *Atividade Integradora · Fase 4 · Ciência da Computação, 2026 — FIAP*
 
-🧑‍🚀 [Julia Ramos | RM568988](https://www.linkedin.com/in/juliaramosguedes) · [Matheus Fuchelberguer | RM569113](https://www.linkedin.com/in/matheus-fuchelberguer-neves/) · [Carlos Eugenio Andrade | RM570285](https://www.linkedin.com/in/carloseugenioandrade/)
+🧑‍🚀 [Julia Ramos | RM568988](https://www.linkedin.com/in/juliaramosguedes) · [Matheus Fuchelberguer | RM569113](https://www.linkedin.com/in/matheus-fuchelberguer-neves/) · [Carlos Eugenio Andrade | RM570285](https://www.linkedin.com/in/carloseugenioandrade/) · [Rodrigo Gomes Dias | RM569142](https://www.linkedin.com/in/rodrigogmdias/)
 ---
 
 ![Nós](https://img.shields.io/badge/NÓS-108-5dade2?labelColor=0a0f1e&logo=nasa&logoColor=c5d8f0) ![Arestas](https://img.shields.io/badge/ARESTAS-137-a569bd?labelColor=0a0f1e&logo=alienware&logoColor=c5d8f0) ![Algoritmos](https://img.shields.io/badge/ALGORITMOS-3-FFE200?labelColor=0a0f1e&logo=anthropic&logoColor=c5d8f0) ![Pessoas](https://img.shields.io/badge/PESSOAS-1.000-52be80?labelColor=0a0f1e&logo=spacex&logoColor=c5d8f0)
