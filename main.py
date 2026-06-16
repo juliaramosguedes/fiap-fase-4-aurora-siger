@@ -45,6 +45,23 @@ from src.models import ColonyNetwork
 from src.scenarios import build_aurora_colony
 
 
+# ---------------------------------------------------------------------------
+# Screen helpers — keep the terminal scroll-free between commands
+# ---------------------------------------------------------------------------
+
+
+def _clear() -> None:
+    """Erase the terminal so each new screen renders without prior scroll."""
+    console.clear()
+
+
+def _await(message: str = "\n   [#64748b][Enter para continuar][/#64748b] ") -> None:
+    """Pause until the user acknowledges, then clear the screen."""
+    console.print(message, end="")
+    input()
+    _clear()
+
+
 def _prompt_module_id(network: ColonyNetwork, prompt: str = "   ID do módulo: ") -> str | None:
     module_id = input(prompt).strip().upper()
     if module_id not in network.modules:
@@ -68,24 +85,25 @@ def _handle_navigate(network: ColonyNetwork) -> None:
     focus: str | None = None   # current complex ID at level 1
 
     while True:
+        _clear()
         if focus is None:
-            # Level 0 — root
             display_root_view(network)
             choice = input("   Complexo (ID) ou [0] menu: ").strip().upper()
 
             if choice == "0":
                 return
             if choice not in network.modules:
-                console.print(f"  [#ef4444]'{choice}' não encontrado.[/#ef4444]\n")
+                console.print(f"  [#ef4444]'{choice}' não encontrado.[/#ef4444]")
+                _await()
                 continue
             if network.modules[choice].parent_id is not None:
-                console.print("  [#64748b]Digite o ID de um complexo raiz (sem pai).[/#64748b]\n")
+                console.print("  [#64748b]Digite o ID de um complexo raiz (sem pai).[/#64748b]")
+                _await()
                 continue
 
             focus = choice
 
         else:
-            # Level 1 — complex
             display_complex_view(network, focus)
             choice = input("   ID do sub-módulo, [V] voltar ou [0] menu: ").strip().upper()
 
@@ -95,24 +113,26 @@ def _handle_navigate(network: ColonyNetwork) -> None:
                 focus = None
                 continue
             if choice not in network.modules:
-                console.print(f"  [#ef4444]'{choice}' não encontrado.[/#ef4444]\n")
+                console.print(f"  [#ef4444]'{choice}' não encontrado.[/#ef4444]")
+                _await()
                 continue
 
             direct_children = get_children(network, focus)
             if choice not in direct_children:
-                console.print(f"  [#64748b]'{choice}' não é sub-módulo direto de {focus}. Digite um dos IDs listados acima.[/#64748b]\n")
+                console.print(f"  [#64748b]'{choice}' não é sub-módulo direto de {focus}. Digite um dos IDs listados acima.[/#64748b]")
+                _await()
                 continue
 
             children = get_children(network, choice)
 
+            _clear()
             if children:
                 # Level 2a — group node: show units, no further navigation
                 display_group_view(network, choice)
-                input("   [Enter para continuar] ")
             else:
                 # Level 2b — unique leaf: show module detail
                 display_module_detail(network, choice)
-                input("   [Enter para continuar] ")
+            _await()
 
 
 # ---------------------------------------------------------------------------
@@ -121,43 +141,55 @@ def _handle_navigate(network: ColonyNetwork) -> None:
 
 
 def _handle_bfs(network: ColonyNetwork) -> None:
+    _clear()
     console.print("\n  [bold]BFS — Exploração por Largura[/bold]")
     display_module_index(network)
     start_id = _prompt_module_id(network, "   Módulo de partida: ")
     if not start_id:
+        _await()
         return
 
     visit_order = bfs_traverse(network, start_id)
+    _clear()
     display_bfs_result(network, start_id, visit_order)
 
-    ans = input("   Calcular caminho mínimo (saltos) até outro módulo? [s/n] ").strip().lower()
+    ans = input("\n   Calcular caminho mínimo (saltos) até outro módulo? [s/n] ").strip().lower()
     if ans == "s":
         end_id = _prompt_module_id(network, "   Módulo de destino: ")
         if end_id:
             path = bfs_shortest_path(network, start_id, end_id)
+            _clear()
             display_bfs_path(network, start_id, end_id, path)
+    _await()
 
 
 def _handle_dfs(network: ColonyNetwork) -> None:
+    _clear()
     console.print("\n  [bold]DFS — Exploração por Profundidade[/bold]")
     display_module_index(network)
     start_id = _prompt_module_id(network, "   Módulo de partida: ")
     if not start_id:
+        _await()
         return
 
     visit_order = dfs_traverse(network, start_id)
     bridges     = find_bridges(network)
+    _clear()
     display_dfs_result(network, start_id, visit_order, bridges)
+    _await()
 
 
 def _handle_dijkstra(network: ColonyNetwork) -> None:
+    _clear()
     console.print("\n  [bold]Dijkstra — Caminho Mínimo Ponderado[/bold]")
     display_module_index(network)
     start_id = _prompt_module_id(network, "   Módulo de origem: ")
     if not start_id:
+        _await()
         return
     end_id = _prompt_module_id(network, "   Módulo de destino: ")
     if not end_id:
+        _await()
         return
 
     console.print()
@@ -174,14 +206,18 @@ def _handle_dijkstra(network: ColonyNetwork) -> None:
     }.get(weight_choice)
     if not weight_type:
         console.print("  [#ef4444]Opção inválida.[/#ef4444]")
+        _await()
         return
 
     path, total_cost = dijkstra_shortest_path(network, start_id, end_id, weight_type)
+    _clear()
     display_dijkstra_result(network, start_id, end_id, path, total_cost, weight_type)
+    _await()
 
 
 def _handle_algorithms(network: ColonyNetwork) -> None:
     while True:
+        _clear()
         console.print()
         console.print("  [bold]Algoritmos de Grafo[/bold]")
         console.print("    [1] BFS — exploração por largura")
@@ -197,6 +233,7 @@ def _handle_algorithms(network: ColonyNetwork) -> None:
             handler(network)
         else:
             console.print("  [#ef4444]Opção inválida.[/#ef4444]")
+            _await()
 
 
 # ---------------------------------------------------------------------------
@@ -205,14 +242,17 @@ def _handle_algorithms(network: ColonyNetwork) -> None:
 
 
 def _handle_fail_module(network: ColonyNetwork) -> None:
+    _clear()
     display_module_index(network)
     module_id = _prompt_module_id(network, "   ID do módulo a simular falha: ")
     if not module_id:
+        _await()
         return
 
     module = network.modules[module_id]
     if module.status == ModuleStatus.SHUTDOWN:
-        console.print(f"  [#fbbf24]{module_id} já está OFFLINE.[/#fbbf24]\n")
+        console.print(f"  [#fbbf24]{module_id} já está OFFLINE.[/#fbbf24]")
+        _await()
         return
 
     if module.priority <= CRITICAL_PRIORITY_THRESHOLD:
@@ -234,13 +274,17 @@ def _handle_fail_module(network: ColonyNetwork) -> None:
         reachable   = bfs_reachable(network, active[0])
         unreachable = [mid for mid in active if mid not in reachable]
 
+    _clear()
     display_simulation_failure(network, module_id, cascade_ids, connected, unreachable)
+    _await()
 
 
 def _handle_restore_module(network: ColonyNetwork) -> None:
+    _clear()
     offline = [m for m in network.modules.values() if m.status == ModuleStatus.SHUTDOWN]
     if not offline:
-        console.print("\n  [#10b981]Nenhum módulo offline. Rede totalmente operacional.[/#10b981]\n")
+        console.print("\n  [#10b981]Nenhum módulo offline. Rede totalmente operacional.[/#10b981]")
+        _await()
         return
 
     console.print()
@@ -252,22 +296,28 @@ def _handle_restore_module(network: ColonyNetwork) -> None:
 
     module_id = input("   ID do módulo a restaurar: ").strip().upper()
     if module_id not in network.modules:
-        console.print("  [#ef4444]Módulo não encontrado.[/#ef4444]\n")
+        console.print("  [#ef4444]Módulo não encontrado.[/#ef4444]")
+        _await()
         return
     if network.modules[module_id].status != ModuleStatus.SHUTDOWN:
-        console.print(f"  [#fbbf24]{module_id} não está offline.[/#fbbf24]\n")
+        console.print(f"  [#fbbf24]{module_id} não está offline.[/#fbbf24]")
+        _await()
         return
 
     restored = cascade_restore(network, module_id)
-    console.print(f"\n  [#10b981]✔ Restaurados: {', '.join(restored)}[/#10b981]\n")
+    console.print(f"\n  [#10b981]✔ Restaurados: {', '.join(restored)}[/#10b981]")
+    _await()
 
 
 def _handle_check_connectivity(network: ColonyNetwork) -> None:
+    _clear()
     connected = is_network_connected(network)
     display_connectivity_status(network, connected)
+    _await()
 
 
 def _handle_energy_manager(network: ColonyNetwork) -> None:
+    _clear()
     active_energy = sum(
         m.energy_consumption_kw
         for m in network.modules.values()
@@ -279,15 +329,19 @@ def _handle_energy_manager(network: ColonyNetwork) -> None:
     try:
         budget = float(input("   Orçamento (kW): ").strip())
     except ValueError:
-        console.print("  [#ef4444]Valor inválido.[/#ef4444]\n")
+        console.print("  [#ef4444]Valor inválido.[/#ef4444]")
+        _await()
         return
 
     candidates = compute_shutdown_candidates(network, budget)
+    _clear()
     display_energy_manager_result(network, budget, active_energy, candidates)
+    _await()
 
 
 def _handle_simulations(network: ColonyNetwork) -> None:
     while True:
+        _clear()
         console.print()
         console.print("  [bold]Simulações Operacionais[/bold]")
         console.print("    [1] Simular falha de módulo  [#64748b](com cascata)[/#64748b]")
@@ -309,6 +363,7 @@ def _handle_simulations(network: ColonyNetwork) -> None:
             handler(network)
         else:
             console.print("  [#ef4444]Opção inválida.[/#ef4444]")
+            _await()
 
 
 # ---------------------------------------------------------------------------
@@ -317,6 +372,7 @@ def _handle_simulations(network: ColonyNetwork) -> None:
 
 
 def _handle_energy_path_cost(network: ColonyNetwork) -> None:
+    _clear()
     console.print()
     console.print("  Informe a rota como IDs separados por vírgula.")
     console.print("  [#64748b]Exemplo: CTL,HAB,MED[/#64748b]")
@@ -326,7 +382,8 @@ def _handle_energy_path_cost(network: ColonyNetwork) -> None:
 
     for mid in path:
         if mid not in network.modules:
-            console.print(f"  [#ef4444]Módulo não encontrado: {mid}[/#ef4444]\n")
+            console.print(f"  [#ef4444]Módulo não encontrado: {mid}[/#ef4444]")
+            _await()
             return
 
     path_edges = []
@@ -334,23 +391,30 @@ def _handle_energy_path_cost(network: ColonyNetwork) -> None:
         u, v = path[i], path[i + 1]
         edge = next((e for e in network.adjacency_list.get(u, []) if e.target == v), None)
         if edge is None:
-            console.print(f"  [#ef4444]Sem conexão direta entre {u} e {v}.[/#ef4444]\n")
+            console.print(f"  [#ef4444]Sem conexão direta entre {u} e {v}.[/#ef4444]")
+            _await()
             return
         path_edges.append(edge)
 
     base_cost  = sum(e.energy_cost_kw for e in path_edges)
     attenuated = energy_path_cost(path_edges)
+    _clear()
     display_energy_path_cost(network, path, base_cost, attenuated)
+    _await()
 
 
 def _handle_global_efficiency(network: ColonyNetwork) -> None:
+    _clear()
     console.print("\n  [#64748b]Calculando eficiência global (Dijkstra para todos os pares)...[/#64748b]")
     ge = global_efficiency(network)
+    _clear()
     display_global_efficiency(network, ge)
+    _await()
 
 
 def _handle_math_model(network: ColonyNetwork) -> None:
     while True:
+        _clear()
         console.print()
         console.print("  [bold]Modelo Matemático[/bold]")
         console.print("    [1] Custo energético de transmissão em rota")
@@ -365,6 +429,7 @@ def _handle_math_model(network: ColonyNetwork) -> None:
             handler(network)
         else:
             console.print("  [#ef4444]Opção inválida.[/#ef4444]")
+            _await()
 
 
 # ---------------------------------------------------------------------------
@@ -373,6 +438,7 @@ def _handle_math_model(network: ColonyNetwork) -> None:
 
 
 def _handle_sustainability(network: ColonyNetwork) -> None:
+    _clear()
     console.print("\n  [#64748b]Calculando métricas ESG...[/#64748b]")
     bridges      = find_bridges(network)
     density      = network_density(network)
@@ -383,7 +449,9 @@ def _handle_sustainability(network: ColonyNetwork) -> None:
         for m in network.modules.values()
         if m.status != ModuleStatus.SHUTDOWN
     )
+    _clear()
     display_sustainability_report(network, bridges, density, density_label, ge, total_energy)
+    _await()
 
 
 # ---------------------------------------------------------------------------
@@ -393,6 +461,7 @@ def _handle_sustainability(network: ColonyNetwork) -> None:
 
 if __name__ == "__main__":
     network = build_aurora_colony()
+    _clear()
     display_welcome(network)
 
     MAIN_HANDLERS = {
@@ -403,11 +472,17 @@ if __name__ == "__main__":
         "5": _handle_sustainability,
     }
 
+    first_iteration = True
     while True:
+        if not first_iteration:
+            _clear()
+        first_iteration = False
+
         display_main_menu()
         choice = input("   Opção: ").strip()
 
         if choice == "0":
+            _clear()
             console.print()
             console.print("  [#a78bfa]🖖  Vida longa e próspera.[/#a78bfa]")
             console.print("  [#64748b]Missão encerrada. Aurora Siger persiste.[/#64748b]")
@@ -419,3 +494,4 @@ if __name__ == "__main__":
             handler(network)
         else:
             console.print("  [#ef4444]Opção inválida.[/#ef4444]")
+            _await()
