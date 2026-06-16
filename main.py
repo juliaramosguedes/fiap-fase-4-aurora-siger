@@ -1,6 +1,12 @@
 """
 SIGIC — Sistema Inteligente de Gerenciamento da Infraestrutura da Colônia
-Aurora Siger · Fase 4 · FIAP — Ciência da Computação · Julia Ramos (RM568988)
+Aurora Siger · Fase 4 · FIAP — Ciência da Computação
+
+Integrantes:
+  - Julia Ramos (RM568988)
+  - Matheus Fuchelberguer (RM569113)
+  - Carlos Eugenio Andrade (RM570285)
+  - Rodrigo Gomes Dias (RM569142)
 
 Execução:  python main.py
 Requisito: pip install rich

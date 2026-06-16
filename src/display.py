@@ -111,7 +111,9 @@ def display_welcome(network: ColonyNetwork) -> None:
     console.print()
     console.print(Panel(
         f"[bold {_HDR}]⭐  SIGIC — Sistema Inteligente de Gerenciamento da Infraestrutura da Colônia[/bold {_HDR}]\n"
-        f"[{_DIM}]Aurora Siger · Fase 4 · FIAP — Ciência da Computação · Julia Ramos RM568988[/{_DIM}]\n\n"
+        f"[{_DIM}]Aurora Siger · Fase 4 · FIAP — Ciência da Computação[/{_DIM}]\n"
+        f"[{_DIM}]Julia Ramos RM568988 · Matheus Fuchelberguer RM569113 · "
+        f"Carlos Eugenio Andrade RM570285 · Rodrigo Gomes Dias RM569142[/{_DIM}]\n\n"
         f"  [{_OK}]●[/{_OK}] Rede inicializada  ·  "
         f"[bold]{total}[/bold] módulos [{_DIM}]({top} complexos)[/{_DIM}]  ·  "
         f"[bold]{conns}[/bold] conexões  ·  "
