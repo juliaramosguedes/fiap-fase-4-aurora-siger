@@ -50,13 +50,18 @@ from src.scenarios import build_aurora_colony
 # ---------------------------------------------------------------------------
 
 
+_NETWORK: ColonyNetwork | None = None
+
+
 def _clear() -> None:
-    """Erase the terminal so each new screen renders without prior scroll."""
+    """Erase the terminal and redraw the persistent SIGIC header on top."""
     console.clear()
+    if _NETWORK is not None:
+        display_welcome(_NETWORK)
 
 
 def _await(message: str = "\n   [#64748b][Enter para continuar][/#64748b] ") -> None:
-    """Pause until the user acknowledges, then clear the screen."""
+    """Pause until the user acknowledges, then clear and redraw the header."""
     console.print(message, end="")
     input()
     _clear()
@@ -460,9 +465,8 @@ def _handle_sustainability(network: ColonyNetwork) -> None:
 
 
 if __name__ == "__main__":
-    network = build_aurora_colony()
-    _clear()
-    display_welcome(network)
+    _NETWORK = build_aurora_colony()
+    network = _NETWORK
 
     MAIN_HANDLERS = {
         "1": _handle_navigate,
@@ -472,12 +476,8 @@ if __name__ == "__main__":
         "5": _handle_sustainability,
     }
 
-    first_iteration = True
     while True:
-        if not first_iteration:
-            _clear()
-        first_iteration = False
-
+        _clear()
         display_main_menu()
         choice = input("   Opção: ").strip()
 
