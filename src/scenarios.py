@@ -18,7 +18,14 @@ Structure:
     SOL, WND, BAT … — group node (represents N physical units; unit_count=N)
     SOL-01, SOL-02  — individual unit leaf (physical instance under its group)
 
-All distances, energy costs, and latencies are SIMULATED.
+Energy values are FIXED per node (not auto-split) and aligned to the totals
+documented in docs/modules-reference.md, so every complex sums to the
+reference budget (1.030 kW total). For each subsystem:
+  group_kw  — coordination/monitoring overhead at the group node
+  leaf_kw   — per-unit consumption at each numbered leaf
+  total subsystem = group_kw + leaf_kw × count
+
+All distances, energy costs, latencies and storage capacities are SIMULATED.
 Colony layout: roughly circular, ~2 km diameter. Central core at 0-200 m radius,
 inner ring at 200-400 m, outer zones at 400-1000 m, remote outposts up to 900 m.
 """
@@ -35,8 +42,11 @@ def _build_colony_data() -> tuple[dict[str, Module], list[Edge]]:
     """
     Returns all colony modules and edges.
 
-    Energy split: group node = 10% of total energy (coordination overhead).
-                  each leaf  = 90% / unit_count (proportional to its unit).
+    Energy: explicit, fixed per node (group_kw, leaf_kw) — values aligned to
+            docs/modules-reference.md so each complex matches the documented
+            consumption budget exactly.
+    Storage: auto-split (10% group / 90% distributed across leaves) —
+             approximate since storage budgets are not the calibration target.
     """
     nodes: list[Module] = []
     edges: list[Edge] = []
@@ -50,12 +60,15 @@ def _build_colony_data() -> tuple[dict[str, Module], list[Edge]]:
         nodes.append(Module(module_id, name, priority, energy, storage, comm, parent_id=parent))
 
     def expand(base_id: str, name: str, priority: int,
-               energy: float, storage: float, comm: int,
+               group_kw: float, leaf_kw: float,
+               storage: float, comm: int,
                parent: str, count: int,
                edge_type: EdgeType = T, dist: float = 50.0,
                physical_count: int | None = None) -> None:
         """Create group node + leaf nodes + internal edges for a multi-unit subsystem.
 
+        group_kw       — overhead consumption at the group node (monitoring/control).
+        leaf_kw        — per-unit consumption at each numbered leaf.
         count          — number of zone leaf nodes in the graph (topology).
         physical_count — actual physical units represented (defaults to count).
                          Use when one zone leaf represents many physical devices,
@@ -63,13 +76,12 @@ def _build_colony_data() -> tuple[dict[str, Module], list[Edge]]:
         """
         actual_units = physical_count if physical_count is not None else count
         nodes.append(Module(base_id, name, priority,
-                            round(energy * 0.10, 2), round(storage * 0.10),
+                            group_kw, round(storage * 0.10),
                             comm, parent_id=parent, unit_count=actual_units))
-        leaf_energy  = round(energy  * 0.90 / count, 2)
         leaf_storage = round(storage * 0.90 / count)
         for i in range(1, count + 1):
             nodes.append(Module(f"{base_id}-{i:02d}", name, priority,
-                                leaf_energy, leaf_storage, comm, parent_id=base_id))
+                                leaf_kw, leaf_storage, comm, parent_id=base_id))
             edges.append(Edge(base_id, f"{base_id}-{i:02d}", dist, 0.1, 0.5, edge_type))
 
     # ------------------------------------------------------------------
@@ -78,80 +90,81 @@ def _build_colony_data() -> tuple[dict[str, Module], list[Edge]]:
     add("CTL", "Centro de Controle", 1, 15.0, 300.0, 1)
 
     # ------------------------------------------------------------------
-    # PWR — power generation and distribution
+    # PWR — power generation and distribution (target total: 27 kW)
     # ------------------------------------------------------------------
-    add("PWR", "Complexo de Energia", 1, 5.0, 100.0, 1)
-    expand("SOL", "Campo Solar Fotovoltaico",       1,  2.0, 5000.0, 2, "PWR", 3, S, 300.0, physical_count=SOLAR_ARRAY_COUNT)
-    expand("WND", "Parque de Turbinas Eólicas",     1,  2.0, 3000.0, 3, "PWR", 2, S, 375.0, physical_count=WIND_TURBINE_COUNT)
-    expand("BAT", "Bancos de Baterias",             1,  8.0,  800.0, 2, "PWR", 4, T,  10.0, physical_count=BATTERY_BANK_COUNT)
-    add("DST", "Rede de Distribuição Elétrica",     1, 10.0,  200.0, 1, "PWR")
+    add("PWR", "Complexo de Energia", 1, 25.0, 100.0, 1)
+    #      base   nome                              prio  group  leaf  storage   comm  parent  count  edge   dist     physical_count
+    expand("SOL", "Campo Solar Fotovoltaico",        1,    0.2,  0.6, 5000.0,    2,   "PWR",   3,    S,    300.0, physical_count=SOLAR_ARRAY_COUNT)   # 0.2 + 3×0.6 = 2.0 kW
+    expand("WND", "Parque de Turbinas Eólicas",      1,    0.2,  0.9, 3000.0,    3,   "PWR",   2,    S,    375.0, physical_count=WIND_TURBINE_COUNT)  # 0.2 + 2×0.9 = 2.0 kW
+    expand("BAT", "Bancos de Baterias",              1,    0.8,  1.8,  800.0,    2,   "PWR",   4,    T,     10.0, physical_count=BATTERY_BANK_COUNT)  # 0.8 + 4×1.8 = 8.0 kW
+    add("DST", "Rede de Distribuição Elétrica",      1, 10.0,  200.0, 1, "PWR")                                                                       # 10.0 kW
 
     # ------------------------------------------------------------------
-    # LSS — life support
+    # LSS — life support (target total: 505 kW)
     # ------------------------------------------------------------------
-    add("LSS", "Sistema de Suporte de Vida", 1, 5.0, 150.0, 1)
-    expand("ATM", "Controle Atmosférico",  1, 300.0, 6000.0, 1, "LSS", 3, T, 40.0)
-    expand("WAT", "Reciclagem de Água",    1, 200.0, 8000.0, 1, "LSS", 3, T, 50.0)
+    add("LSS", "Sistema de Suporte de Vida", 1, 510.0, 150.0, 1)
+    expand("ATM", "Controle Atmosférico",   1, 30.0, 90.0, 6000.0, 1, "LSS", 3, T, 40.0)  # 30 + 3×90 = 300 kW
+    expand("WAT", "Reciclagem de Água",     1, 20.0, 60.0, 8000.0, 1, "LSS", 3, T, 50.0)  # 20 + 3×60 = 200 kW
 
     # ------------------------------------------------------------------
-    # HAB — habitat and residential
+    # HAB — habitat and residential (target total: 85 kW)
     # ------------------------------------------------------------------
-    add("HAB", "Complexo Habitacional", 2, 5.0, 500.0, 2)
-    expand("QRT", "Módulos Residenciais",          2, 30.0, 8000.0, 3, "HAB", 8, T, 60.0)
-    expand("REC", "Hub de Recreação",              4, 15.0, 2000.0, 5, "HAB", 2, T, 80.0)
-    expand("DIN", "Refeitório e Cozinha",          3, 25.0, 1500.0, 4, "HAB", 3, T, 70.0)
-    add("EDU", "Centro Educacional",               4, 10.0, 1200.0, 5, "HAB")
+    add("HAB", "Complexo Habitacional", 2, 82.0, 500.0, 2)
+    expand("QRT", "Módulos Residenciais",   2,  6.0, 3.0, 8000.0, 3, "HAB", 8, T, 60.0)  # 6 + 8×3 = 30 kW
+    expand("REC", "Hub de Recreação",       4,  3.0, 6.0, 2000.0, 5, "HAB", 2, T, 80.0)  # 3 + 2×6 = 15 kW
+    expand("DIN", "Refeitório e Cozinha",   3,  4.0, 7.0, 1500.0, 4, "HAB", 3, T, 70.0)  # 4 + 3×7 = 25 kW
+    add("EDU", "Centro Educacional",        4, 10.0, 1200.0, 5, "HAB")                   # 10 kW
 
     # ------------------------------------------------------------------
-    # MED — medical complex
+    # MED — medical complex (target total: 106 kW)
     # ------------------------------------------------------------------
-    add("MED", "Complexo Médico", 2, 5.0, 200.0, 1)
-    add("EMG", "Pronto-Socorro",               2, 20.0,  500.0, 1, "MED")
-    expand("SRG", "Centro Cirúrgico",          2, 25.0,  400.0, 2, "MED", 2, T, 50.0)
-    add("ICU", "UTI",                          2, 30.0,  300.0, 1, "MED")
-    expand("CLN", "Clínicas Gerais",           3, 12.0,  600.0, 3, "MED", 3, T, 60.0)
-    expand("DEN", "Clínica Odontológica",      4,  8.0,  200.0, 4, "MED", 2, T, 70.0)
-    expand("PSY", "Centro de Saúde Mental",    4,  6.0,  250.0, 4, "MED", 2, T, 80.0)
+    add("MED", "Complexo Médico", 2, 104.0, 200.0, 1)
+    add("EMG", "Pronto-Socorro",              2, 20.0, 500.0, 1, "MED")                  # 20 kW
+    expand("SRG", "Centro Cirúrgico",         2,  5.0, 10.0, 400.0, 2, "MED", 2, T, 50.0)  #  5 + 2×10 = 25 kW
+    add("ICU", "UTI",                         2, 30.0, 300.0, 1, "MED")                  # 30 kW
+    expand("CLN", "Clínicas Gerais",          3,  3.0,  3.0, 600.0, 3, "MED", 3, T, 60.0)  #  3 + 3×3  = 12 kW
+    expand("DEN", "Clínica Odontológica",     4,  2.0,  3.0, 200.0, 4, "MED", 2, T, 70.0)  #  2 + 2×3  =  8 kW
+    expand("PSY", "Centro de Saúde Mental",   4,  2.0,  2.0, 250.0, 4, "MED", 2, T, 80.0)  #  2 + 2×2  =  6 kW
 
     # ------------------------------------------------------------------
-    # COM — communications
+    # COM — communications (target total: 45 kW)
     # ------------------------------------------------------------------
-    add("COM", "Sistema de Comunicação", 3, 5.0, 100.0, 1)
-    expand("INT", "Hub de Rede Interna",              3,  8.0, 150.0, 1, "COM", 2, T,  30.0)
-    expand("EXT", "Array de Comunicação com a Terra", 3, 20.0, 500.0, 2, "COM", 2, S,  60.0)
-    expand("TOR", "Torres de Transmissão",            3, 12.0, 300.0, 2, "COM", 3, S, 100.0)
+    add("COM", "Sistema de Comunicação", 3, 42.0, 100.0, 1)
+    expand("INT", "Hub de Rede Interna",                3, 2.0, 3.0, 150.0, 1, "COM", 2, T,  30.0)  # 2 + 2×3 =  8 kW
+    expand("EXT", "Array de Comunicação com a Terra",   3, 4.0, 8.0, 500.0, 2, "COM", 2, S,  60.0)  # 4 + 2×8 = 20 kW
+    expand("TOR", "Torres de Transmissão",              3, 3.0, 3.0, 300.0, 2, "COM", 3, S, 100.0)  # 3 + 3×3 = 12 kW
 
     # ------------------------------------------------------------------
-    # AGR — agriculture
+    # AGR — agriculture (target total: 63 kW)
     # ------------------------------------------------------------------
-    add("AGR", "Complexo de Agricultura", 3, 5.0, 200.0, 3)
-    expand("GRH", "Complexo de Estufas",        3, 40.0, 5000.0, 3, "AGR", 5, T,  60.0)
-    expand("FPR", "Processamento de Alimentos", 4, 18.0, 1000.0, 4, "AGR", 2, T,  50.0)
+    add("AGR", "Complexo de Agricultura", 3, 60.0, 200.0, 3)
+    expand("GRH", "Complexo de Estufas",            3, 5.0, 7.0, 5000.0, 3, "AGR", 5, T, 60.0)  # 5 + 5×7 = 40 kW
+    expand("FPR", "Processamento de Alimentos",     4, 4.0, 7.0, 1000.0, 4, "AGR", 2, T, 50.0)  # 4 + 2×7 = 18 kW
 
     # ------------------------------------------------------------------
-    # LOG — logistics and transport
+    # LOG — logistics and transport (target total: 50 kW)
     # ------------------------------------------------------------------
-    add("LOG", "Complexo de Logística", 4, 5.0, 200.0, 3)
-    expand("TRN", "Depósito de Veículos",              4, 15.0, 1500.0, 3, "LOG", 2, T,  80.0)
-    expand("WRH", "Armazém Central",                   4, 10.0, 3000.0, 4, "LOG", 3, T,  40.0)
-    expand("EVA", "Câmara de Atividade Extravehicular", 3, 20.0, 800.0, 2, "LOG", 2, T, 100.0)
+    add("LOG", "Complexo de Logística", 4, 47.0, 200.0, 3)
+    expand("TRN", "Depósito de Veículos",                4, 3.0, 6.0, 1500.0, 3, "LOG", 2, T,  80.0)  # 3 + 2×6 = 15 kW
+    expand("WRH", "Armazém Central",                     4, 4.0, 2.0, 3000.0, 4, "LOG", 3, T,  40.0)  # 4 + 3×2 = 10 kW
+    expand("EVA", "Câmara de Atividade Extravehicular",  3, 4.0, 8.0,  800.0, 2, "LOG", 2, T, 100.0)  # 4 + 2×8 = 20 kW
 
     # ------------------------------------------------------------------
-    # MIN — ISRU mining operations
+    # MIN — ISRU mining operations (target total: 93 kW)
     # ------------------------------------------------------------------
-    add("MIN", "Complexo de Mineração ISRU", 4, 5.0, 200.0, 4)
-    expand("DRL", "Operações de Perfuração",             4, 45.0, 500.0, 4, "MIN", 2, S, 150.0)
-    expand("REF", "Refinaria de Regolito",               4, 35.0, 600.0, 4, "MIN", 2, S,  75.0)
-    expand("RST", "Armazenamento de Recursos Minerados", 5,  8.0, 1500.0, 5, "MIN", 3, T,  20.0)
+    add("MIN", "Complexo de Mineração ISRU", 4, 90.0, 200.0, 4)
+    expand("DRL", "Operações de Perfuração",              4, 5.0, 20.0,  500.0, 4, "MIN", 2, S, 150.0)  # 5 + 2×20 = 45 kW
+    expand("REF", "Refinaria de Regolito",                4, 5.0, 15.0,  600.0, 4, "MIN", 2, S,  75.0)  # 5 + 2×15 = 35 kW
+    expand("RST", "Armazenamento de Recursos Minerados",  5, 2.0,  2.0, 1500.0, 5, "MIN", 3, T,  20.0)  # 2 + 3×2  =  8 kW
 
     # ------------------------------------------------------------------
-    # RES — scientific research
+    # RES — scientific research (target total: 41 kW)
     # ------------------------------------------------------------------
-    add("RES", "Centro de Pesquisa Científica", 5, 5.0, 200.0, 4)
-    add("GEO", "Laboratório de Geologia Planetária", 5,  8.0, 300.0, 5, "RES")
-    add("AGT", "Laboratório de Pesquisa Agrícola",   5, 10.0, 400.0, 5, "RES")
-    add("BIO", "Laboratório de Biologia e Ciências", 5, 12.0, 350.0, 4, "RES")
-    expand("ENV", "Monitoramento Ambiental",          4,  6.0, 200.0, 4, "RES", 2, S, 100.0)
+    add("RES", "Centro de Pesquisa Científica", 5, 38.0, 200.0, 4)
+    add("GEO", "Laboratório de Geologia Planetária", 5,  8.0, 300.0, 5, "RES")               #  8 kW
+    add("AGT", "Laboratório de Pesquisa Agrícola",   5, 10.0, 400.0, 5, "RES")               # 10 kW
+    add("BIO", "Laboratório de Biologia e Ciências", 5, 12.0, 350.0, 4, "RES")               # 12 kW
+    expand("ENV", "Monitoramento Ambiental",         4,  2.0,  2.0, 200.0, 4, "RES", 2, S, 100.0)  # 2 + 2×2 = 6 kW
 
     # ------------------------------------------------------------------
     # Backbone edges — inter-complex connections (22 edges)
