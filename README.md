@@ -236,6 +236,9 @@ python main.py
 | [0] Encerrar missão | — |
 
 > [!NOTE]
+> **Apresentação:** [youtu.be/WEZOV2iZdV4](https://youtu.be/WEZOV2iZdV4?si=dUVbxz9tDLneZMi8) — demonstração completa do SIGIC em execução.
+
+> [!NOTE]
 > Única dependência externa: `rich` para UI. Todos os algoritmos e modelos matemáticos usam biblioteca padrão Python. `build_colony_network()` é determinística — o mesmo grafo é produzido a cada execução.
 
 ---
