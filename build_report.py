@@ -472,7 +472,7 @@ def build_pdf(story: list, output_path: str,
 def cover_page() -> list:
     equipe = [
         ("Julia Ramos",            "RM568988", "LinkedIn →"),
-        ("Matheus Fuchelberguer",  "RM569113", "LinkedIn →"),
+        ("Matheus Fuchelberguer",  "RM571321", "LinkedIn →"),
         ("Carlos Eugenio Andrade", "RM570285", "LinkedIn →"),
         ("Rodrigo Gomes Dias",     "RM569142", "LinkedIn →"),
     ]
