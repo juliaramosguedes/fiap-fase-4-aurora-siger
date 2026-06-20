@@ -73,6 +73,57 @@ flowchart TD
     style N fill:#3d0a0a,color:#fff,stroke:#e74c3c,stroke-width:3px
 ```
 
+**Grafo da colônia** — 10 complexos e 22 conexões de backbone. Cor = prioridade operacional.
+
+```mermaid
+graph TD
+    CTL["CTL<br/>Centro de Controle<br/>P1 · 15 kW"]
+    PWR["PWR<br/>Energia<br/>P1 · 27 kW"]
+    LSS["LSS<br/>Suporte de Vida<br/>P1 · 505 kW"]
+    HAB["HAB<br/>Habitação<br/>P2 · 85 kW"]
+    MED["MED<br/>Médico<br/>P2 · 106 kW"]
+    COM["COM<br/>Comunicação<br/>P3 · 45 kW"]
+    AGR["AGR<br/>Agricultura<br/>P3 · 63 kW"]
+    LOG["LOG<br/>Logística<br/>P4 · 50 kW"]
+    MIN["MIN<br/>Mineração ISRU<br/>P4 · 93 kW"]
+    RES["RES<br/>Pesquisa<br/>P5 · 41 kW"]
+
+    CTL --- COM
+    CTL --- LSS
+    CTL --- PWR
+    CTL --- HAB
+    CTL --- MED
+    CTL --- LOG
+    PWR --- LSS
+    PWR --- HAB
+    PWR --- AGR
+    PWR --- MIN
+    LSS --- HAB
+    LSS --- AGR
+    HAB --- MED
+    HAB --- AGR
+    HAB --- LOG
+    COM --- HAB
+    MED --- RES
+    COM --- RES
+    AGR --- LOG
+    MIN --- LOG
+    MIN --- RES
+    RES --- AGR
+
+    classDef p1 fill:#16213e,stroke:#e74c3c,color:#e74c3c,font-weight:bold
+    classDef p2 fill:#16213e,stroke:#e67e22,color:#e67e22,font-weight:bold
+    classDef p3 fill:#16213e,stroke:#f1c40f,color:#f1c40f,font-weight:bold
+    classDef p4 fill:#16213e,stroke:#52be80,color:#52be80,font-weight:bold
+    classDef p5 fill:#16213e,stroke:#5dade2,color:#5dade2,font-weight:bold
+
+    class CTL,PWR,LSS p1
+    class HAB,MED p2
+    class COM,AGR p3
+    class LOG,MIN p4
+    class RES p5
+```
+
 ---
 
 ## 🛰 Arquitetura
