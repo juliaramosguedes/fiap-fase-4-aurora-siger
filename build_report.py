@@ -647,7 +647,7 @@ def build_fase4() -> None:
     ))
     story.append(body_text(
         "O escalonamento de Fase 3 para Fase 4 segue a lei de potência: "
-        "Cₙ = C₆ × (N/6)ᵅ, com α = 0,5 para infraestrutura compartilhada e "
+        "C(N) = C(6) × (N/6)^α, com α = 0,5 para infraestrutura compartilhada e "
         "α = 0,7 para suporte de vida (LSS). Todos os parâmetros físicos declarados em "
         "src/constants.py — única fonte da verdade do sistema."
     ))
@@ -718,7 +718,7 @@ def build_fase4() -> None:
     # 4. ENERGIA
     story += section_header("4", "INFRAESTRUTURA ENERGÉTICA — FASE 3 → FASE 4")
     story.append(body_text(
-        "Lei de potência: Cₙ = C₆ × (N/6)ᵅ. Fonte da verdade: Fase 3 — "
+        "Lei de potência: C(N) = C(6) × (N/6)^α. Fonte da verdade: Fase 3 — "
         "46 kW para 6 pessoas (NASA DRA 5.0). α = 0,7 para LSS; α = 0,5 para "
         "infraestrutura compartilhada."
     ))
