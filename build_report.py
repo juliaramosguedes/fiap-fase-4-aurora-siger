@@ -305,6 +305,12 @@ def make_styles() -> dict:
         ref=ParagraphStyle("ref",
             fontName="Helvetica", fontSize=8, leading=12,
             textColor=BODY_TEXT, leftIndent=10, firstLineIndent=-10, spaceAfter=3),
+        table_h=ParagraphStyle("table_h",
+            fontName="Helvetica-Bold", fontSize=8, leading=11,
+            textColor=ORANGE),
+        table_c=ParagraphStyle("table_c",
+            fontName="Helvetica", fontSize=7.5, leading=11,
+            textColor=BODY_TEXT),
     )
 
 
@@ -327,6 +333,13 @@ def dim_rule() -> HRFlowable:
 
 def dark_table(data: list, col_widths: list,
                extra_styles: list | None = None) -> Table:
+    wrapped = []
+    for i, row in enumerate(data):
+        pstyle = S["table_h"] if i == 0 else S["table_c"]
+        wrapped.append([
+            Paragraph(cell, pstyle) if isinstance(cell, str) else cell
+            for cell in row
+        ])
     ts = TableStyle([
         ("BACKGROUND",    (0, 0), (-1,  0), BG_CARD),
         ("TEXTCOLOR",     (0, 0), (-1,  0), ORANGE),
@@ -348,7 +361,7 @@ def dark_table(data: list, col_widths: list,
     if extra_styles:
         for es in extra_styles:
             ts.add(*es)
-    t = Table(data, colWidths=col_widths)
+    t = Table(wrapped, colWidths=col_widths)
     t.setStyle(ts)
     return t
 
@@ -458,10 +471,10 @@ def build_pdf(story: list, output_path: str,
 # ---------------------------------------------------------------------------
 def cover_page() -> list:
     equipe = [
-        ("Julia Ramos",            "RM568988", "linkedin.com/in/juliaramosguedes"),
-        ("Matheus Fuchelberguer",  "RM569113", "linkedin.com/in/matheus-fuchelberguer-neves"),
-        ("Carlos Eugenio Andrade", "RM570285", "linkedin.com/in/carloseugenioandrade"),
-        ("Rodrigo Gomes Dias",     "RM569142", "linkedin.com/in/rodrigogmdias"),
+        ("Julia Ramos",            "RM568988", "LinkedIn →"),
+        ("Matheus Fuchelberguer",  "RM569113", "LinkedIn →"),
+        ("Carlos Eugenio Andrade", "RM570285", "LinkedIn →"),
+        ("Rodrigo Gomes Dias",     "RM569142", "LinkedIn →"),
     ]
     badges = [
         ("108 NÓS",      "CTL PWR LSS HAB\nMED COM AGR LOG MIN RES"),
@@ -586,23 +599,20 @@ def build_colonia_diagram() -> None:
     story.append(dark_table(info_data, [38*mm, 30*mm, USABLE_W - 68*mm]))
     story.append(sp(8))
 
+    _PC_HEX = ["#e74c3c", "#e67e22", "#f1c40f", "#52be80", "#5dade2"]
+
+    def _pc(text, p):
+        return Paragraph(f'<font color="{_PC_HEX[p-1]}">{text}</font>', S["table_c"])
+
     prio_data = [
         ["Cor", "Prioridade", "Complexos"],
-        ["● P1 — CRÍTICO",      "Sem desligamento permitido",     "CTL · PWR · LSS"],
-        ["● P2 — ALTO",         "Desligamento só em emergência",  "HAB · MED"],
-        ["● P3 — ESSENCIAL",    "Redução controlada",             "COM · AGR"],
-        ["● P4 — OPERACIONAL",  "Pode entrar em standby",         "LOG · MIN"],
-        ["● P5 — PESQUISA",     "Primeira a ser reduzida",        "RES"],
+        [_pc("● P1 — CRÍTICO",     1), "Sem desligamento permitido",     "CTL · PWR · LSS"],
+        [_pc("● P2 — ALTO",        2), "Desligamento só em emergência",  "HAB · MED"],
+        [_pc("● P3 — ESSENCIAL",   3), "Redução controlada",             "COM · AGR"],
+        [_pc("● P4 — OPERACIONAL", 4), "Pode entrar em standby",         "LOG · MIN"],
+        [_pc("● P5 — PESQUISA",    5), "Primeira a ser reduzida",        "RES"],
     ]
-    prio_ts = [
-        ("TEXTCOLOR", (0, 1), (0, 1), P_COLORS[1]),
-        ("TEXTCOLOR", (0, 2), (0, 2), P_COLORS[2]),
-        ("TEXTCOLOR", (0, 3), (0, 3), P_COLORS[3]),
-        ("TEXTCOLOR", (0, 4), (0, 4), P_COLORS[4]),
-        ("TEXTCOLOR", (0, 5), (0, 5), P_COLORS[5]),
-    ]
-    story.append(dark_table(prio_data, [42*mm, 72*mm, USABLE_W - 114*mm],
-                            extra_styles=prio_ts))
+    story.append(dark_table(prio_data, [42*mm, 72*mm, USABLE_W - 114*mm]))
     story.append(sp(8))
     story.append(Paragraph(
         '★ "A complexidade de um sistema não é fraqueza '

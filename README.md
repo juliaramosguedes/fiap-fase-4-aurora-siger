@@ -77,16 +77,16 @@ flowchart TD
 
 ```mermaid
 graph TD
-    CTL["CTL<br/>Centro de Controle<br/>P1 · 15 kW"]
-    PWR["PWR<br/>Energia<br/>P1 · 27 kW"]
-    LSS["LSS<br/>Suporte de Vida<br/>P1 · 505 kW"]
-    HAB["HAB<br/>Habitação<br/>P2 · 85 kW"]
-    MED["MED<br/>Médico<br/>P2 · 106 kW"]
-    COM["COM<br/>Comunicação<br/>P3 · 45 kW"]
-    AGR["AGR<br/>Agricultura<br/>P3 · 63 kW"]
-    LOG["LOG<br/>Logística<br/>P4 · 50 kW"]
-    MIN["MIN<br/>Mineração ISRU<br/>P4 · 93 kW"]
-    RES["RES<br/>Pesquisa<br/>P5 · 41 kW"]
+    CTL("CTL<br/>Centro de Controle<br/>P1 · 15 kW")
+    PWR("PWR<br/>Energia<br/>P1 · 27 kW")
+    LSS("LSS<br/>Suporte de Vida<br/>P1 · 505 kW")
+    HAB("HAB<br/>Habitação<br/>P2 · 85 kW")
+    MED("MED<br/>Médico<br/>P2 · 106 kW")
+    COM("COM<br/>Comunicação<br/>P3 · 45 kW")
+    AGR("AGR<br/>Agricultura<br/>P3 · 63 kW")
+    LOG("LOG<br/>Logística<br/>P4 · 50 kW")
+    MIN("MIN<br/>Mineração ISRU<br/>P4 · 93 kW")
+    RES("RES<br/>Pesquisa<br/>P5 · 41 kW")
 
     CTL --- COM
     CTL --- LSS
@@ -123,6 +123,10 @@ graph TD
     class LOG,MIN p4
     class RES p5
 ```
+
+🔴 P1 Crítico · 🟠 P2 Alto · 🟡 P3 Essencial · 🟢 P4 Operacional · 🔵 P5 Pesquisa
+
+Conexão: azul contínuo = túnel pressurizado · laranja contínuo = rota de superfície · roxo tracejado = sem fio
 
 ---
 
