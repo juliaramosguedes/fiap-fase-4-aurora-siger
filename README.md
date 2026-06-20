@@ -103,6 +103,9 @@ O sistema opera de forma interativa: navega a hierarquia de módulos, aplica os 
 de grafo, simula falhas em cascata e emite relatório ESG com 5 dimensões. Toda análise é
 determinística e reprodutível.
 
+> [!NOTE]
+> **Apresentação do projeto:** [youtu.be/WEZOV2iZdV4](https://youtu.be/WEZOV2iZdV4?si=dUVbxz9tDLneZMi8) — demonstração completa do SIGIC em execução.
+
 ---
 
 ## A colônia
@@ -234,9 +237,6 @@ python main.py
 | [4] Modelo matemático | Eficiência global (GE), atenuação energética por rota, densidade da rede |
 | [5] Relatório ESG | 5 dimensões: energia sustentável, infraestrutura, sistemas críticos, governança, eficiência |
 | [0] Encerrar missão | — |
-
-> [!NOTE]
-> **Apresentação:** [youtu.be/WEZOV2iZdV4](https://youtu.be/WEZOV2iZdV4?si=dUVbxz9tDLneZMi8) — demonstração completa do SIGIC em execução.
 
 > [!NOTE]
 > Única dependência externa: `rich` para UI. Todos os algoritmos e modelos matemáticos usam biblioteca padrão Python. `build_colony_network()` é determinística — o mesmo grafo é produzido a cada execução.
